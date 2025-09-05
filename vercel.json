@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "regions": ["iad1"],
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "buildCommand": "npx prisma generate && npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "env": {
+    "DATABASE_URL": "postgresql://neondb_owner:npg_aIwBtor7XbY1@ep-divine-hall-adfwmi9e-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+  }
+}

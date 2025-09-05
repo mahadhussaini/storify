@@ -1,0 +1,44 @@
+version: '3.8'
+
+# Use the docker.env file for environment variables
+# Copy env.docker.example to docker.env and update the values
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: storify-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: storify
+      POSTGRES_USER: storify_user
+      POSTGRES_PASSWORD: storify_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - storify-network
+
+  # Socket.io Server
+  socket-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: storify-socket
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - FRONTEND_URL=http://localhost:3000
+      - PORT=3001
+    networks:
+      - storify-network
+
+volumes:
+  postgres_data:
+
+networks:
+  storify-network:
+    driver: bridge
