@@ -1,0 +1,44 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main book/document shape -->
+  <rect x="120" y="100" width="272" height="312" rx="12" fill="url(#gradient1)" stroke="url(#gradient2)" stroke-width="4"/>
+  
+  <!-- Book pages effect -->
+  <rect x="120" y="100" width="20" height="312" rx="12" fill="url(#gradient2)" opacity="0.4"/>
+  
+  <!-- Writing lines -->
+  <line x1="160" y1="160" x2="360" y2="160" stroke="url(#gradient2)" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="160" y1="200" x2="340" y2="200" stroke="url(#gradient2)" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="160" y1="240" x2="360" y2="240" stroke="url(#gradient2)" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="160" y1="280" x2="320" y2="280" stroke="url(#gradient2)" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="160" y1="320" x2="350" y2="320" stroke="url(#gradient2)" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  
+  <!-- Pen/quill icon -->
+  <path d="M 360 80 L 400 40 L 380 20 L 340 60 Z" fill="url(#gradient2)"/>
+  <line x1="360" y1="80" x2="360" y2="140" stroke="url(#gradient2)" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="360" cy="140" r="6" fill="url(#gradient2)"/>
+  
+  <!-- Collaborative users/connection dots -->
+  <circle cx="80" cy="160" r="10" fill="url(#gradient1)"/>
+  <circle cx="80" cy="220" r="10" fill="url(#gradient2)"/>
+  <circle cx="80" cy="280" r="10" fill="url(#gradient1)"/>
+  
+  <!-- Connection lines to book -->
+  <line x1="90" y1="160" x2="120" y2="160" stroke="url(#gradient1)" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="90" y1="220" x2="120" y2="220" stroke="url(#gradient2)" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="90" y1="280" x2="120" y2="280" stroke="url(#gradient1)" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+  
+  <!-- Sparkle/collaboration icon -->
+  <path d="M 420 320 L 430 300 L 440 320 L 430 340 Z" fill="url(#gradient2)" opacity="0.7"/>
+  <circle cx="430" cy="320" r="3" fill="url(#gradient1)"/>
+</svg>
