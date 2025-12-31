@@ -83,7 +83,6 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 GITHUB_CLIENT_ID=your-github-client-id
 GITHUB_CLIENT_SECRET=your-github-client-secret
 OPENAI_API_KEY=your-openai-api-key
-NEXT_PUBLIC_SOCKET_URL=wss://your-socket-server.com
 ```
 
 ## Database Migration
@@ -100,22 +99,6 @@ npx prisma db push
 # Generate Prisma client
 npx prisma generate
 ```
-
-## Socket.io Setup (Optional)
-
-For real-time features, you'll need a Socket.io server. Here are your options:
-
-### Option 1: Vercel Serverless Functions
-- Socket.io works with Vercel's serverless functions
-- Set `NEXT_PUBLIC_SOCKET_URL` to your Vercel domain
-
-### Option 2: Cloud Socket.io Service
-- Use services like [Socket.io Cloud](https://socketio.cloud) or [Pusher](https://pusher.com)
-- Set the service URL as `NEXT_PUBLIC_SOCKET_URL`
-
-### Option 3: Railway/Fly.io Deployment
-- Deploy the Socket.io server separately
-- Use the deployment URL as `NEXT_PUBLIC_SOCKET_URL`
 
 ## OAuth Setup (Optional)
 
@@ -139,9 +122,23 @@ For real-time features, you'll need a Socket.io server. Here are your options:
 
 To enable AI-powered writing assistance:
 
-1. Get an OpenAI API key from [OpenAI](https://platform.openai.com)
-2. Set `OPENAI_API_KEY` in Vercel environment variables
-3. The AI features will automatically work
+1. **Get OpenAI API Key**:
+   - Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+   - Sign in and create a new secret key
+   - Copy the API key (starts with `sk-`)
+
+2. **Configure in Vercel**:
+   - Go to your Vercel project dashboard
+   - Navigate to Settings → Environment Variables
+   - Add: `OPENAI_API_KEY` with your API key
+   - Make sure it's set for Production environment
+
+3. **Verify Setup**:
+   - Redeploy your application
+   - Test AI features in the writing interface
+   - Check Vercel function logs if features don't work
+
+**Note**: AI features are optional. Without the API key, users can still write stories but won't have access to AI assistance, suggestions, or prompt generation.
 
 ## Deployment Verification
 

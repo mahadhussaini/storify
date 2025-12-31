@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
-import OpenAI from 'openai'
+import { withOpenAI, OpenAIConfigurationError } from '@/lib/openai'
 import { z } from 'zod'
 
 const assistSchema = z.object({
@@ -10,10 +10,6 @@ const assistSchema = z.object({
   prompt: z.string().optional(),
 })
 
-// Initialize OpenAI client only if API key is available
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-}) : null
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,13 +20,6 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { mode, content, prompt } = assistSchema.parse(body)
-
-    if (!openai) {
-      return NextResponse.json(
-        { error: 'AI features are not configured' },
-        { status: 503 }
-      )
-    }
 
     let systemPrompt = ''
     let userPrompt = ''
@@ -57,14 +46,16 @@ export async function POST(request: NextRequest) {
         break
     }
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      max_tokens: 1000,
-      temperature: 0.7,
+    const completion = await withOpenAI(async (openai) => {
+      return await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7,
+      })
     })
 
     const suggestion = completion.choices[0]?.message?.content?.trim()
@@ -82,6 +73,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Validation failed', details: error.errors },
         { status: 400 }
+      )
+    }
+
+    if (error instanceof OpenAIConfigurationError) {
+      return NextResponse.json(
+        { error: 'AI features are not configured' },
+        { status: 503 }
       )
     }
 

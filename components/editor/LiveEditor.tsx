@@ -28,7 +28,6 @@ interface LiveEditorProps {
   onTypingStop: () => void
   cursors: Cursor[]
   users: UserPresence[]
-  showPresence: boolean
 }
 
 export function LiveEditor({
@@ -38,8 +37,7 @@ export function LiveEditor({
   onTypingStart,
   onTypingStop,
   cursors,
-  users,
-  showPresence
+  users
 }: LiveEditorProps) {
   const [localContent, setLocalContent] = useState(content)
   const [cursorPosition, setCursorPosition] = useState(0)
@@ -87,72 +85,14 @@ export function LiveEditor({
     }
   }, [onCursorUpdate])
 
-  // Render live cursors
+  // Render live cursors (disabled - no real-time collaboration)
   const renderCursors = () => {
-    if (!showPresence) return null
-
-    return cursors.map((cursor) => {
-      const textBeforeCursor = localContent.substring(0, cursor.position)
-      const lines = textBeforeCursor.split('\n')
-      const currentLine = lines.length - 1
-      const currentLineStart = textBeforeCursor.lastIndexOf('\n') + 1
-      const positionInLine = cursor.position - currentLineStart
-
-      // Calculate approximate position (this is simplified)
-      const lineHeight = 24 // Approximate line height
-      const charWidth = 8 // Approximate character width
-      const top = currentLine * lineHeight + 8
-      const left = positionInLine * charWidth + 16
-
-      return (
-        <motion.div
-          key={cursor.userId}
-          className="live-cursor absolute pointer-events-none z-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          style={{
-            top: `${top}px`,
-            left: `${left}px`,
-            color: cursor.color
-          }}
-        >
-          <div
-            className="live-cursor-label"
-            style={{ backgroundColor: cursor.color }}
-          >
-            {cursor.name}
-          </div>
-        </motion.div>
-      )
-    })
+    return null
   }
 
-  // Render typing indicators
+  // Render typing indicators (disabled - no real-time collaboration)
   const renderTypingIndicators = () => {
-    if (!showPresence) return null
-
-    const typingUsers = users.filter(u => u.isTyping && u.id !== 'current-user')
-
-    if (typingUsers.length === 0) return null
-
-    return (
-      <div className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 px-2 py-1 sm:px-3 sm:py-2 z-50 max-w-xs sm:max-w-sm">
-        <div className="flex items-center space-x-1 sm:space-x-2">
-          <div className="typing-indicator">
-            <div className="typing-dot"></div>
-            <div className="typing-dot"></div>
-            <div className="typing-dot"></div>
-          </div>
-          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
-            {typingUsers.length === 1
-              ? `${typingUsers[0].name} is typing...`
-              : `${typingUsers.length} people are typing...`
-            }
-          </span>
-        </div>
-      </div>
-    )
+    return null
   }
 
   return (

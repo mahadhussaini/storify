@@ -2,7 +2,6 @@
 
 import { SessionProvider } from 'next-auth/react'
 import { ThemeProvider } from 'next-themes'
-import { SocketProvider } from '@/lib/socket-context'
 import { ClientOnly } from '@/components/ClientOnly'
 import { HydrationBoundary } from '@/components/HydrationBoundary'
 
@@ -17,9 +16,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             enableSystem
             disableTransitionOnChange
           >
-            <SocketProvider>
-              {children}
-            </SocketProvider>
+            {children}
           </ThemeProvider>
         </ClientOnly>
       </SessionProvider>

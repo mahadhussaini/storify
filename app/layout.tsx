@@ -8,11 +8,16 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Storify - Collaborative Story Building',
-  description: 'Create amazing stories together in real-time with friends and fellow writers.',
+  description: 'Create amazing stories with friends and fellow writers.',
   keywords: ['story', 'collaborative', 'writing', 'real-time', 'creative'],
   authors: [{ name: 'Storify Team' }],
   icons: {
-    icon: '/logo.svg',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/logo.svg', type: 'image/svg+xml', sizes: 'any' }
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/logo.svg',
   },
 }
 

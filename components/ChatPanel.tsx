@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
-import { useSocket } from '@/lib/socket-context'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, X, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -38,10 +37,10 @@ interface ChatPanelProps {
 
 export function ChatPanel({ storyId, users, onClose, isMobile = false }: ChatPanelProps) {
   const { data: session } = useSession()
-  const { socket, isConnected } = useSocket()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [isSending, setIsSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -62,22 +61,14 @@ export function ChatPanel({ storyId, users, onClose, isMobile = false }: ChatPan
     }
 
     loadMessages()
+    
+    // Poll for new messages every 3 seconds
+    const interval = setInterval(() => {
+      loadMessages()
+    }, 3000)
+
+    return () => clearInterval(interval)
   }, [storyId])
-
-  // Socket event listeners
-  useEffect(() => {
-    if (!socket || !isConnected) return
-
-    const handleChatMessage = (message: ChatMessage) => {
-      setMessages(prev => [...prev, message])
-    }
-
-    socket.on('chat-message', handleChatMessage)
-
-    return () => {
-      socket.off('chat-message', handleChatMessage)
-    }
-  }, [socket, isConnected])
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -94,18 +85,29 @@ export function ChatPanel({ storyId, users, onClose, isMobile = false }: ChatPan
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!newMessage.trim() || !session?.user) return
+    if (!newMessage.trim() || !session?.user || isSending) return
 
+    setIsSending(true)
     try {
-      if (socket && isConnected) {
-        socket.emit('chat-message', {
-          message: newMessage.trim()
+      const response = await fetch(`/api/stories/${storyId}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: newMessage.trim()
         })
-      }
+      })
 
-      setNewMessage('')
+      if (response.ok) {
+        const data = await response.json()
+        setMessages(prev => [...prev, data.message])
+        setNewMessage('')
+      } else {
+        console.error('Failed to send message')
+      }
     } catch (error) {
       console.error('Error sending message:', error)
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -217,7 +219,7 @@ export function ChatPanel({ storyId, users, onClose, isMobile = false }: ChatPan
           />
           <Button
             type="submit"
-            disabled={!newMessage.trim() || !isConnected}
+            disabled={!newMessage.trim() || isSending}
             size="sm"
             className={isMobile ? 'p-2' : ''}
           >
@@ -225,11 +227,6 @@ export function ChatPanel({ storyId, users, onClose, isMobile = false }: ChatPan
           </Button>
         </form>
 
-        {!isConnected && (
-          <p className="text-xs text-red-600 dark:text-red-400 mt-2">
-            Disconnected from chat
-          </p>
-        )}
       </div>
     </div>
   )

@@ -18,10 +18,6 @@ GITHUB_CLIENT_SECRET=""
 
 # OpenAI API (optional - for AI features)
 OPENAI_API_KEY=""
-
-# Socket.io Server
-NEXT_PUBLIC_SOCKET_URL="http://localhost:3001"
-FRONTEND_URL="http://localhost:3000"
 ```
 
 ## Getting OAuth Keys
@@ -39,13 +35,20 @@ FRONTEND_URL="http://localhost:3000"
 3. Set Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
 
 ### OpenAI API
-1. Go to [OpenAI API](https://platform.openai.com/api-keys)
-2. Create a new API key
-3. Copy the key to `OPENAI_API_KEY`
+1. Go to [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Sign in or create an account
+3. Navigate to API Keys section
+4. Click "Create new secret key"
+5. Copy the generated API key (it starts with `sk-`)
+6. Set it as `OPENAI_API_KEY` in your environment variables
+
+**Important Notes:**
+- Keep your API key secure and never commit it to version control
+- The API key is validated automatically - invalid keys will prevent AI features from working
+- AI features are optional - the app will work without them but with reduced functionality
+- Monitor your OpenAI usage and billing at [OpenAI Usage](https://platform.openai.com/usage)
 
 ## Important Notes
 
 - `NEXTAUTH_SECRET` should be a secure random string in production
 - `DATABASE_URL` can be changed to PostgreSQL, MySQL, etc. for production
-- The `NEXT_PUBLIC_SOCKET_URL` must be accessible from the browser
-- CORS is configured to allow localhost origins by default

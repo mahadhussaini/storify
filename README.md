@@ -1,16 +1,21 @@
 # Storify - Collaborative Story Building App
 
-A real-time collaborative storytelling platform built with Next.js, Socket.io, and Tailwind CSS. Create amazing stories together with friends and fellow writers!
+A collaborative storytelling platform built with Next.js and Tailwind CSS. Create amazing stories with friends and fellow writers!
 
 ## ✨ Features
 
 ### 🚀 Core Features
-- **Real-time Collaboration**: Multiple users can write/edit the same story simultaneously
-- **Live Cursors**: See where other writers are typing with colored cursors
-- **User Presence**: View who is online and actively writing
+- **Story Management**: Create, edit, and manage your stories
 - **Version History**: Track changes with detailed version history and rollback
 - **Chat System**: Built-in chat for brainstorming and discussion
 - **AI Assistant**: Get writing suggestions, continuations, and improvements
+
+### 🤖 AI Features
+- **Writing Assistant**: Get AI-powered suggestions, continuations, and improvements
+- **Smart Prompts**: Generate creative writing prompts for various genres
+- **Context-Aware**: AI understands your story's tone, style, and content
+- **Multiple Modes**: Suggest, continue, summarize, or improve your writing
+- **Optional Integration**: App works without AI features if OpenAI key is not provided
 
 ### 🎨 UI/UX
 - **Dark/Light Mode**: Toggle between themes with system preference detection
@@ -19,7 +24,6 @@ A real-time collaborative storytelling platform built with Next.js, Socket.io, a
 - **Adaptive Layout**: Side panels become bottom sheets on mobile
 - **Performance Optimized**: Reduced animations on mobile for better performance
 - **Modern Interface**: Clean, distraction-free writing environment
-- **Real-time Updates**: Instant synchronization across all devices
 
 ### 🔐 Authentication
 - **Email/Password**: Traditional authentication
@@ -27,16 +31,43 @@ A real-time collaborative storytelling platform built with Next.js, Socket.io, a
 - **Anonymous Mode**: Guest accounts for quick access
 - **Secure**: JWT tokens and encrypted passwords
 
+### 🤖 OpenAI Integration
+The app includes optional AI features powered by OpenAI. To enable AI assistance:
+
+1. **Get an OpenAI API Key**:
+   - Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+   - Create a new secret key (starts with `sk-`)
+
+2. **Add to Environment Variables**:
+   ```env
+   OPENAI_API_KEY="sk-your-api-key-here"
+   ```
+
+3. **Deployment Platforms**:
+   - **Vercel**: Add to project environment variables
+   - **Docker**: Add to `docker.env` file
+   - **Local**: Add to `.env.local` file
+
+**Note**: AI features are completely optional. The app functions normally without an OpenAI key, but with reduced AI assistance capabilities.
+
 ## 🛠 Tech Stack
 
 - **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
-- **Backend**: Node.js, Socket.io, Express
+- **Backend**: Next.js API Routes
 - **Database**: SQLite with Prisma ORM
 - **Authentication**: NextAuth.js
 - **AI**: OpenAI API integration
-- **Real-time**: Socket.io for WebSocket connections
 - **Styling**: Tailwind CSS with custom components
 - **Animations**: Framer Motion
+
+## 🏗 Architecture
+
+### API Design
+The application uses a REST API architecture:
+
+- **REST API**: Next.js API routes handle CRUD operations, authentication, AI features, and chat
+- **Shared Types**: TypeScript interfaces ensure consistency across frontend and backend
+- **Centralized Config**: Environment-specific configuration for different deployment scenarios
 
 ## 🚀 Getting Started
 
@@ -86,7 +117,6 @@ deploy-vercel.bat   # Windows
 
 3. **Access the application**
    - Frontend: http://localhost:3000
-   - Socket Server: http://localhost:3001
    - Database: localhost:5432
 
 ### 🛠 Local Development Setup
@@ -98,9 +128,9 @@ deploy-vercel.bat   # Windows
    npm run setup
    ```
 
-2. **Start both servers**
+2. **Start the development server**
    ```bash
-   npm run dev:full
+   npm run dev
    ```
 
 3. **Open your browser**
@@ -119,7 +149,6 @@ deploy-vercel.bat   # Windows
 2. **Install dependencies**
    ```bash
    npm install
-   cd server && npm install && cd ..
    ```
 
 3. **Set up environment variables**
@@ -144,9 +173,6 @@ deploy-vercel.bat   # Windows
 
    # OpenAI API (for AI features)
    OPENAI_API_KEY=""
-
-   # Socket.io Server
-   NEXT_PUBLIC_SOCKET_URL="http://localhost:3001"
    ```
 
 4. **Set up the database**
@@ -155,14 +181,7 @@ deploy-vercel.bat   # Windows
    npx prisma db push
    ```
 
-5. **Start the development servers**
-
-   Terminal 1 - Socket.io Server:
-   ```bash
-   npm run server
-   ```
-
-   Terminal 2 - Frontend:
+5. **Start the development server**
    ```bash
    npm run dev
    ```
@@ -172,82 +191,52 @@ deploy-vercel.bat   # Windows
    http://localhost:3000
    ```
 
+7. **Verify API Health** (Optional)
+   ```bash
+   npm run api:health  # Check overall API health
+   ```
+
 ## 🔧 Troubleshooting
-
-### WebSocket Connection Issues
-
-If you're seeing WebSocket connection errors:
-
-1. **Check if the Socket.io server is running**
-   ```bash
-   curl http://localhost:3001/health
-   ```
-
-2. **Verify port availability**
-   ```bash
-   netstat -an | findstr :3001
-   ```
-
-3. **Check browser console for errors**
-   - Look for CORS errors
-   - Check if the WebSocket URL is correct
-
-4. **Restart servers**
-   ```bash
-   # Kill any existing processes on port 3001
-   npx kill-port 3001
-
-   # Restart the Socket.io server
-   npm run server
-   ```
-
-5. **Firewall/Antivirus**
-   - Ensure port 3001 is not blocked by firewall
-   - Disable antivirus temporarily for testing
 
 ### Common Issues
 
-- **Port 3001 already in use**: Run `npx kill-port 3001`
-- **CORS errors**: Check the server CORS configuration
 - **Database errors**: Run `npm run db:setup`
-- **Missing dependencies**: Run `npm install` in both root and server directories
-- **WebSocket connection fails**: Ensure Socket.io server is running on port 3001
-
-### Testing WebSocket Connection
-
-1. **Server Health Check**:
-   ```bash
-   curl http://localhost:3001/health
-   ```
-
-2. **Browser Console**: Look for connection logs like "✅ Connected to socket server"
-
-3. **Connection Status**: Check the connection status indicator in the bottom-left corner of the app
+- **Missing dependencies**: Run `npm install`
+- **Build errors**: Run `npm run build` to check for TypeScript errors
 
 ## 📁 Project Structure
 
 ```
 storify/
 ├── app/                    # Next.js app directory
-│   ├── api/               # API routes
-│   ├── auth/              # Authentication pages
-│   ├── dashboard/         # Dashboard page
-│   ├── story/             # Story editor pages
-│   └── globals.css        # Global styles
-├── components/            # React components
-│   ├── editor/           # Editor components
-│   ├── ui/               # UI components
-│   └── ...               # Feature components
-├── lib/                  # Utility libraries
-│   ├── auth.ts          # Authentication config
-│   ├── prisma.ts        # Database client
-│   ├── socket-context.tsx # Socket.io context
-│   └── utils.ts         # Helper functions
-├── prisma/               # Database schema
-│   └── schema.prisma    # Prisma schema
-├── server/               # Socket.io server
-│   └── index.js         # Server implementation
-└── public/              # Static assets
+│   ├── api/               # REST API routes
+│   │   ├── ai/           # AI-powered features
+│   │   ├── auth/         # Authentication
+│   │   ├── rooms/        # Collaboration rooms
+│   │   ├── stories/      # Story management
+│   │   ├── health/       # System health checks
+│   │   └── upload/       # File upload
+│   ├── auth/             # Authentication pages
+│   ├── dashboard/        # Dashboard page
+│   ├── story/            # Story editor pages
+│   └── globals.css       # Global styles
+├── components/           # React components
+│   ├── editor/          # Editor components
+│   ├── ui/              # UI components
+│   └── ...              # Feature components
+├── lib/                 # Utility libraries
+│   ├── auth.ts         # Authentication config
+│   ├── prisma.ts       # Database client
+│   ├── openai.ts       # OpenAI integration
+│   ├── api-utils.ts    # API utilities
+│   ├── api-config.ts   # API configuration
+│   └── utils.ts        # Helper functions
+├── types/              # TypeScript type definitions
+│   ├── api.ts         # API types
+│   └── openai.ts      # OpenAI types
+├── prisma/            # Database schema
+│   └── schema.prisma  # Prisma schema
+└── public/            # Static assets
 ```
 
 ## 🔧 API Endpoints
@@ -270,31 +259,21 @@ storify/
 
 ### Chat
 - `GET /api/stories/[id]/chat` - Get chat messages
+- `POST /api/stories/[id]/chat` - Send chat message
 
 ### AI
-- `POST /api/ai/assist` - Get AI assistance
+- `POST /api/ai/assist` - Get AI writing assistance (suggest, continue, summarize, improve)
+- `POST /api/ai/prompts` - Generate creative writing prompts
 
-## 🔌 Socket.io Events
+### System & Health
+- `GET /api/health` - Comprehensive system health check (API, database)
 
-### Client → Server
-- `authenticate` - Authenticate user
-- `join-room` - Join story room
-- `story-change` - Update story content
-- `cursor-update` - Update cursor position
-- `typing-start/stop` - Typing indicators
-- `chat-message` - Send chat message
-- `save-version` - Save story version
-
-### Server → Client
-- `authenticated` - Authentication success
-- `room-joined` - Room join success
-- `story-updated` - Story content update
-- `user-joined/left` - User presence updates
-- `users-updated` - User list update
-- `cursor-updated/removed` - Cursor updates
-- `user-typing` - Typing indicators
-- `chat-message` - New chat message
-- `version-saved` - Version saved
+### Rooms & Collaboration
+- `GET /api/rooms` - List available collaboration rooms
+- `POST /api/rooms` - Create a new collaboration room
+- `GET /api/rooms/[roomId]` - Get room details
+- `PATCH /api/rooms/[roomId]` - Update room settings
+- `DELETE /api/rooms/[roomId]` - Delete a room
 
 ## 🎨 Customization
 
@@ -360,37 +339,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔧 Troubleshooting
 
-### Socket.io Connection Issues
-
-If you see "WebSocket connection failed" errors:
-
-1. **Verify server is running**
-   ```bash
-   curl http://localhost:3001/health
-   ```
-   Should return server status information.
-
-2. **Test Socket.io connection**
-   - Open: http://localhost:3000/test-socket.html
-   - Should show green "Connected" status
-
-3. **Common solutions**
-   - **Port blocked**: Ensure port 3001 isn't blocked by firewall/antivirus
-   - **Environment variables**: Check `NEXT_PUBLIC_SOCKET_URL` is set correctly
-   - **CORS issues**: Verify frontend URL is in server's CORS allowlist
-   - **Browser cache**: Clear browser cache and hard refresh (Ctrl+F5)
-
-4. **Manual testing**
-   ```bash
-   # Test server health
-   curl http://localhost:3001/health
-
-   # Test Socket.io handshake
-   curl -X POST http://localhost:3001/socket.io/ \
-     -H "Content-Type: application/json" \
-     -d '{"sid":"","upgrades":[],"pingInterval":25000,"pingTimeout":5000}'
-   ```
-
 ### Database Issues
 
 If you encounter database errors:
@@ -437,7 +385,6 @@ If you have any questions or need help, please open an issue on GitHub or contac
 
 ### Services
 - **app**: Next.js frontend application
-- **socket-server**: Socket.io real-time server
 - **db**: PostgreSQL database
 
 ### Environment Variables

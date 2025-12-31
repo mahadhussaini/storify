@@ -21,12 +21,13 @@ export function Logo({ size = 'md', showText = true, className = '' }: LogoProps
 
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
-      <div className={`relative ${sizeClasses[size]}`}>
+      <div className={`relative ${sizeClasses[size]} flex-shrink-0`}>
         <Image
           src="/logo.svg"
-          alt="Storify"
+          alt="Storify Logo"
           fill
           className="object-contain"
+          priority={size === 'lg'}
         />
       </div>
       {showText && (

@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
-import OpenAI from 'openai'
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+import { withOpenAI, OpenAIConfigurationError } from '@/lib/openai'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,13 +13,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { count = 5 } = body
 
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: 'AI features are not configured' },
-        { status: 503 }
-      )
-    }
-
     const prompt = `Generate ${count} creative writing prompts for fiction stories. Each prompt should be:
 1. Engaging and thought-provoking
 2. Between 15-25 words long
@@ -32,13 +21,15 @@ export async function POST(request: NextRequest) {
 
 Return only the prompts as a JSON array of strings, no additional text or formatting.`
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'user', content: prompt }
-      ],
-      max_tokens: 500,
-      temperature: 0.8,
+    const completion = await withOpenAI(async (openai) => {
+      return await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 500,
+        temperature: 0.8,
+      })
     })
 
     const response = completion.choices[0]?.message?.content?.trim()
@@ -61,6 +52,13 @@ Return only the prompts as a JSON array of strings, no additional text or format
 
     return NextResponse.json({ prompts })
   } catch (error) {
+    if (error instanceof OpenAIConfigurationError) {
+      return NextResponse.json(
+        { error: 'AI features are not configured' },
+        { status: 503 }
+      )
+    }
+
     console.error('AI prompts error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },

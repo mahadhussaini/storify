@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import { useSocket } from '@/lib/socket-context'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users,
@@ -21,7 +20,9 @@ import {
   BookOpen,
   Lightbulb,
   BarChart3,
-  Heart
+  Heart,
+  Keyboard,
+  X
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -29,7 +30,6 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { formatDate } from '@/lib/utils'
 import { LiveEditor } from '@/components/editor/LiveEditor'
-import { UserPresence } from '@/components/UserPresence'
 import { ChatPanel } from '@/components/ChatPanel'
 import { VersionHistory } from '@/components/VersionHistory'
 import { AIAssistant } from '@/components/AIAssistant'
@@ -39,6 +39,7 @@ import { WritingPrompts } from '@/components/WritingPrompts'
 import { StoryAnalytics } from '@/components/StoryAnalytics'
 import { StorySocial } from '@/components/StorySocial'
 import { Logo } from '@/components/Logo'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
 interface Story {
   id: string
@@ -71,7 +72,6 @@ interface UserPresence {
 
 export default function StoryEditor({ storyId }: { storyId: string }) {
   const { data: session } = useSession()
-  const { socket, isConnected } = useSocket()
   const [story, setStory] = useState<Story | null>(null)
   const [content, setContent] = useState('')
   const [title, setTitle] = useState('')
@@ -81,7 +81,6 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
   const [cursors, setCursors] = useState<any[]>([])
   const [showChat, setShowChat] = useState(false)
   const [showVersions, setShowVersions] = useState(false)
-  const [showPresence, setShowPresence] = useState(true)
   const [showAI, setShowAI] = useState(false)
   const [showImageUpload, setShowImageUpload] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
@@ -89,83 +88,8 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [showSocial, setShowSocial] = useState(false)
   const [isPublic, setIsPublic] = useState(false)
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
 
-  // Socket event handlers
-  useEffect(() => {
-    if (!socket || !isConnected) return
-
-    const handleRoomJoined = (data: any) => {
-      console.log('Joined room:', data)
-      setUsers(data.users || [])
-      setCursors(data.cursors || [])
-      if (data.story) {
-        setContent(data.story.content || '')
-      }
-    }
-
-    const handleStoryUpdated = (data: any) => {
-      if (data.author?.id !== (session?.user as any)?.id) {
-        setContent(data.content)
-      }
-    }
-
-    const handleUserJoined = (data: any) => {
-      console.log('User joined:', data.user.name)
-      toast.success(`${data.user.name} joined the story`)
-    }
-
-    const handleUserLeft = (data: any) => {
-      console.log('User left:', data.user?.name)
-      toast(`${data.user?.name || 'A user'} left the story`)
-    }
-
-    const handleUsersUpdated = (users: UserPresence[]) => {
-      setUsers(users)
-    }
-
-    const handleCursorUpdated = (data: any) => {
-      setCursors(prev => {
-        const existing = prev.find(c => c.userId === data.userId)
-        if (existing) {
-          return prev.map(c => c.userId === data.userId ? { ...c, ...data } : c)
-        }
-        return [...prev, data]
-      })
-    }
-
-    const handleCursorRemoved = (data: any) => {
-      setCursors(prev => prev.filter(c => c.userId !== data.userId))
-    }
-
-    const handleUserTyping = (data: any) => {
-      setUsers(prev => prev.map(u =>
-        u.id === data.userId
-          ? { ...u, isTyping: data.isTyping }
-          : u
-      ))
-    }
-
-    // Register event listeners
-    socket.on('room-joined', handleRoomJoined)
-    socket.on('story-updated', handleStoryUpdated)
-    socket.on('user-joined', handleUserJoined)
-    socket.on('user-left', handleUserLeft)
-    socket.on('users-updated', handleUsersUpdated)
-    socket.on('cursor-updated', handleCursorUpdated)
-    socket.on('cursor-removed', handleCursorRemoved)
-    socket.on('user-typing', handleUserTyping)
-
-    return () => {
-      socket.off('room-joined', handleRoomJoined)
-      socket.off('story-updated', handleStoryUpdated)
-      socket.off('user-joined', handleUserJoined)
-      socket.off('user-left', handleUserLeft)
-      socket.off('users-updated', handleUsersUpdated)
-      socket.off('cursor-updated', handleCursorUpdated)
-      socket.off('cursor-removed', handleCursorRemoved)
-      socket.off('user-typing', handleUserTyping)
-    }
-  }, [socket, isConnected, session])
 
   // Load story data
   useEffect(() => {
@@ -178,14 +102,6 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
           setTitle(data.story.title)
           setContent(data.story.content || '')
           setIsPublic(data.story.isPublic)
-
-          // Join the room if it exists
-          if (socket && data.story.room) {
-            socket.emit('join-room', {
-              roomId: data.story.room.id,
-              storyId: storyId
-            })
-          }
         } else {
           toast.error('Failed to load story')
         }
@@ -200,43 +116,26 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
     if (storyId && session) {
       loadStory()
     }
-  }, [storyId, session, socket])
+  }, [storyId, session])
 
   // Handle content changes
   const handleContentChange = useCallback((newContent: string) => {
     setContent(newContent)
-
-    // Emit changes to other users
-    if (socket && isConnected) {
-      socket.emit('story-change', {
-        content: newContent,
-        timestamp: new Date()
-      })
-    }
-  }, [socket, isConnected])
+  }, [])
 
   // Handle cursor position updates
   const handleCursorUpdate = useCallback((position: number, selection?: any) => {
-    if (socket && isConnected) {
-      socket.emit('cursor-update', {
-        position,
-        selection
-      })
-    }
-  }, [socket, isConnected])
+    // Cursor tracking removed - no real-time collaboration
+  }, [])
 
   // Handle typing indicators
   const handleTypingStart = useCallback(() => {
-    if (socket && isConnected) {
-      socket.emit('typing-start')
-    }
-  }, [socket, isConnected])
+    // Typing indicators removed - no real-time collaboration
+  }, [])
 
   const handleTypingStop = useCallback(() => {
-    if (socket && isConnected) {
-      socket.emit('typing-stop')
-    }
-  }, [socket, isConnected])
+    // Typing indicators removed - no real-time collaboration
+  }, [])
 
   // Save story
   const handleSave = useCallback(async () => {
@@ -308,6 +207,50 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
     return () => clearTimeout(timer)
   }, [content, title, handleSave, story])
 
+  // Keyboard shortcuts for AI features
+  const shortcuts = useKeyboardShortcuts([
+    {
+      key: 'a',
+      ctrlKey: true,
+      shiftKey: true,
+      action: () => setShowAI(!showAI),
+      description: 'Toggle AI Assistant'
+    },
+    {
+      key: 'p',
+      ctrlKey: true,
+      shiftKey: true,
+      action: () => setShowPrompts(!showPrompts),
+      description: 'Toggle Writing Prompts'
+    },
+    {
+      key: 's',
+      ctrlKey: true,
+      action: handleSave,
+      description: 'Save Story'
+    },
+    {
+      key: 'c',
+      ctrlKey: true,
+      shiftKey: true,
+      action: () => setShowChat(!showChat),
+      description: 'Toggle Chat'
+    },
+    {
+      key: 'h',
+      ctrlKey: true,
+      shiftKey: true,
+      action: () => setShowVersions(!showVersions),
+      description: 'Toggle Version History'
+    },
+    {
+      key: '/',
+      ctrlKey: true,
+      action: () => setShowKeyboardShortcuts(!showKeyboardShortcuts),
+      description: 'Show Keyboard Shortcuts'
+    }
+  ])
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -362,49 +305,11 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
               </div>
             </div>
 
-            {/* Center - Connection status - Hidden on mobile, shown on larger screens */}
-            <div className="hidden md:flex items-center space-x-4">
-              {isConnected ? (
-                <div className="flex items-center space-x-2 text-green-600">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm">Connected</span>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2 text-red-600">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span className="text-sm">Disconnected</span>
-                </div>
-              )}
-
-              {users.length > 1 && (
-                <div className="flex items-center space-x-2">
-                  <Users className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {users.length} online
-                  </span>
-                </div>
-              )}
-            </div>
-
             {/* Right side - Mobile optimized */}
             <div className="flex items-center space-x-1 sm:space-x-2">
-              {/* Mobile connection indicator */}
-              <div className="md:hidden">
-                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} title={isConnected ? 'Connected' : 'Disconnected'}></div>
-              </div>
 
               {/* Mobile-optimized toolbar */}
               <div className="flex items-center space-x-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowPresence(!showPresence)}
-                  className="p-2"
-                  title="Toggle Presence"
-                >
-                  {showPresence ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </Button>
-
                 <Button
                   variant="ghost"
                   size="sm"
@@ -501,6 +406,16 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
                   </span>
                 </Button>
 
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowKeyboardShortcuts(!showKeyboardShortcuts)}
+                  className="p-2"
+                  title="Keyboard Shortcuts (Ctrl+/)"
+                >
+                  <Keyboard className="w-4 h-4" />
+                </Button>
+
                 <ThemeToggle />
               </div>
             </div>
@@ -509,9 +424,9 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
       </header>
 
       {/* Main content */}
-      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-56px)] sm:min-h-[calc(100vh-64px)]">
+      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-56px)] sm:min-h-[calc(100vh-64px)] h-[calc(100vh-56px)] sm:h-[calc(100vh-64px)]">
         {/* Editor */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative min-h-0">
           <LiveEditor
             content={content}
             onChange={handleContentChange}
@@ -520,7 +435,6 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
             onTypingStop={handleTypingStop}
             cursors={cursors}
             users={users}
-            showPresence={showPresence}
           />
         </div>
 
@@ -532,7 +446,7 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'tween', duration: 0.3 }}
-              className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 max-h-[60vh] overflow-hidden"
+              className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 max-h-[60vh] overflow-hidden flex flex-col"
             >
               {showChat && (
                 <ChatPanel
@@ -549,18 +463,20 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
               />
               )}
               {showAI && (
-                              <AIAssistant
-                storyContent={content}
-                onSuggestion={handleAISuggestion}
-                onClose={() => setShowAI(false)}
-              />
+                              <div className="h-full flex flex-col min-h-0">
+                <AIAssistant
+                  storyContent={content}
+                  onSuggestion={handleAISuggestion}
+                  onClose={() => setShowAI(false)}
+                />
+              </div>
               )}
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Desktop: Side panels */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block h-full min-h-0">
           <AnimatePresence>
             {showChat && (
               <motion.div
@@ -568,7 +484,7 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 320, opacity: 0 }}
                 transition={{ type: 'tween', duration: 0.3 }}
-                className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700"
+                className="w-80 h-full bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col min-h-0"
               >
                 <ChatPanel
                   storyId={storyId}
@@ -584,7 +500,7 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 320, opacity: 0 }}
                 transition={{ type: 'tween', duration: 0.3 }}
-                className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700"
+                className="w-80 h-full bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col min-h-0"
               >
                 <VersionHistory
                   storyId={storyId}
@@ -599,7 +515,7 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 320, opacity: 0 }}
                 transition={{ type: 'tween', duration: 0.3 }}
-                className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700"
+                className="w-80 h-full bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col min-h-0"
               >
                 <AIAssistant
                   storyContent={content}
@@ -649,9 +565,43 @@ export default function StoryEditor({ storyId }: { storyId: string }) {
         )}
       </div>
 
-      {/* User presence indicator */}
-      {showPresence && users.length > 1 && (
-        <UserPresence users={users} />
+      {/* Keyboard Shortcuts Modal */}
+      {showKeyboardShortcuts && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Keyboard Shortcuts
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowKeyboardShortcuts(false)}
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {shortcuts.map(({ shortcut, description }, index) => (
+                <div key={index} className="flex items-center justify-between py-2">
+                  <span className="text-gray-600 dark:text-gray-400 text-sm">
+                    {description}
+                  </span>
+                  <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs rounded border">
+                    {shortcut}
+                  </kbd>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                Press <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Ctrl+/</kbd> to toggle this help
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

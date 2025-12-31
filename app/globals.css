@@ -89,6 +89,66 @@ a {
   background: #475569;
 }
 
+/* AI Assistant scrollable area - more visible scrollbar */
+.ai-assistant-scrollable::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ai-assistant-scrollable::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.ai-assistant-scrollable::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+
+.ai-assistant-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.dark .ai-assistant-scrollable::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark .ai-assistant-scrollable::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark .ai-assistant-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Firefox scrollbar for AI Assistant */
+.ai-assistant-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+  /* Ensure scrolling works */
+  min-height: 0;
+  height: 100%;
+  /* Enable smooth scrolling */
+  -webkit-overflow-scrolling: touch;
+}
+
+.dark .ai-assistant-scrollable {
+  scrollbar-color: #475569 #1e293b;
+}
+
+/* Force scrollbar to always be visible when content overflows */
+.ai-assistant-scrollable::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 8px;
+}
+
+.ai-assistant-scrollable::-webkit-scrollbar:vertical {
+  width: 8px;
+}
+
+.ai-assistant-scrollable::-webkit-scrollbar:horizontal {
+  height: 8px;
+}
+
 /* Mobile optimizations */
 @media (max-width: 640px) {
   /* Reduce motion for better performance on mobile */

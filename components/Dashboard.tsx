@@ -23,7 +23,6 @@ import { CreateStoryModal } from '@/components/CreateStoryModal'
 import { JoinRoomModal } from '@/components/JoinRoomModal'
 import { Logo } from '@/components/Logo'
 import { formatRelativeTime } from '@/lib/utils'
-import { useSocket } from '@/lib/socket-context'
 import toast from 'react-hot-toast'
 
 interface Story {
@@ -49,7 +48,6 @@ interface Story {
 
 export default function Dashboard() {
   const { data: session } = useSession()
-  const { isConnected } = useSocket()
   const [stories, setStories] = useState<Story[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -149,10 +147,6 @@ export default function Dashboard() {
             <div className="flex items-center space-x-4">
               {/* Connection Status */}
               <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {isConnected ? 'Connected' : 'Disconnected'}
-                </span>
               </div>
 
               <ThemeToggle />
